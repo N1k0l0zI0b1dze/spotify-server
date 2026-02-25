@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 // Schema
 const userSchema = new mongoose.Schema(
@@ -60,8 +61,28 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: ture },
+  { timestamps: true },
 );
 
-const User = mongoose("User", userSchema);
+// Method to compare password to hashed password
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// hash password before saving the user
+userSchema.pre("save", async function (next) {
+  console.log("Pre middleware - before saving the user", this);
+
+  // only hash password if it has been modified
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  // hash the password
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+const User = mongoose.model("User", userSchema);
 module.exports = User;

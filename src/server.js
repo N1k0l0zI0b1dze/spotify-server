@@ -1,19 +1,45 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-
 //Load env variables
+const dotenv = require("dotenv");
 dotenv.config();
 
-//Initialize app
+const express = require("express");
+const { StatusCodes } = require("http-status-codes");
+
+const connectedDB = require("./config/dbConnect.js");
+const userRouter = require("./routes/userRoutes.js");
+
 const app = express();
 
-//Connect to database
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log(err));
+//Middleware
+app.use(express.json());
 
-// Start the server
+//Initialize app
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Routes
+app.use("/api/users", userRouter);
+
+// Error handling middleware (optional)
+// 404
+app.use((req, res, next) => {
+  const error = new Error("Not Found - " + req.originalUrl);
+  error.status = StatusCodes.NOT_FOUND;
+  next(error);
+});
+
+// Global error Handler
+app.use((err, req, res, next) => {
+  res.status(err.status || StatusCodes.INTERNAL_SERVER_ERROR).json({
+    message: err.message || "Internal Server Error",
+    status: "error",
+  });
+});
+// Start the server
+const startServer = async () => {
+  await connectedDB(); // ensures DB is connected first
+  app.listen(PORT, () =>
+    console.log(`Server is running http://localhost:${PORT}`),
+  );
+};
+
+startServer();
