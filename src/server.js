@@ -7,6 +7,7 @@ const { StatusCodes } = require("http-status-codes");
 
 const connectedDB = require("./config/dbConnect.js");
 const userRouter = require("./routes/userRoutes.js");
+const artistRouter = require("./routes/artistRoutes.js");
 
 const app = express();
 
@@ -18,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 
 // Routes
 app.use("/api/users", userRouter);
+app.use("/api/artists", artistRouter);
 
 // Error handling middleware (optional)
 // 404
